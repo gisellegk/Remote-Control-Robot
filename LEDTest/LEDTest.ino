@@ -55,7 +55,7 @@ void loop() {
     default:
       break;
   }
-  delay(250);
+  delay(100);
 
 
 }

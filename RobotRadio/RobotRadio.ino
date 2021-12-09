@@ -9,50 +9,120 @@
 #define R    1
 
 
+const int PinRightPWM = 9;
+const int PinLeftPWM = 10;
+const int PinOn = 6;
+const int PinLeftForward = 11;
+const int PinLeftBackward = 12;
+const int PinRightForward = 8;
+const int PinRightBackward = 7;
+
+int encoderR = 0;
+int encoderL = 0;
+
+
 int receivedByte = 0;
 
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
-  Serial.begin(57600);
+
+  pinMode(2, INPUT);
+  pinMode(4, INPUT);
+  attachInterrupt(digitalPinToInterrupt(2), service2, RISING);
+  attachInterrupt(digitalPinToInterrupt(4), service4, RISING);
+  pinMode(13, OUTPUT);
+  pinMode(3, OUTPUT);
+
+  pinMode(PinRightPWM, OUTPUT);
+  pinMode(PinLeftPWM, OUTPUT);
+  pinMode(PinOn, INPUT);
+  pinMode(PinLeftForward, OUTPUT);
+  pinMode(PinLeftBackward, OUTPUT);
+
+  analogWrite(PinRightPWM, 0);
+  analogWrite(PinLeftPWM, 0);
+  delay(5000);
+
+  drive('F');
+
+  delay(1000);
+  brake();
+
+  Serial1.begin(57600);
 }
 
 void loop() {
-  digitalWrite(6,LOW);
-  digitalWrite(7,LOW);
-  digitalWrite(8,LOW);
-  digitalWrite(9,LOW);
-  digitalWrite(10,LOW);
-  digitalWrite(11,LOW);
-  digitalWrite(12,LOW);
-  digitalWrite(13,LOW);
-  switch(receivedByte){
+
+  switch (receivedByte) {
     // do stuff based on received byte
     case R:
-      digitalWrite(6,HIGH);
+      // Turn Clockwise
+      // Right side: backwards
+      // Left side: forward
+      turn('R');
       break;
     case L:
-      digitalWrite(7,HIGH);
+      // Turn CCW
+      // Left: backward
+      // Right: Forward
+      turn('L');
+
       break;
     case D:
-      digitalWrite(8,HIGH);
+      // Drive Backwards
+      // Both sided backward
+      drive('B');
       break;
     case U:
-      digitalWrite(9,HIGH);
+      // Drive Forward
+      // Both sides Forward
+      drive('F');
+
       break;
     case DR:
-      digitalWrite(10,HIGH);
+      // Turn R while driving backward
+      // Both sides backwards
+      // Right side half speed
+      setDir(LOW, 'R');
+      setDir(LOW, 'L');
+      setSpd(4, 'L');
+      setSpd(2, 'R');
+
+
       break;
     case DL:
-      digitalWrite(11,HIGH);
+      // Turn L while driving backwards
+      // Both sides backwards
+      // Left side half speed
+      setDir(LOW, 'R');
+      setDir(LOW, 'L');
+      setSpd(2, 'L');
+      setSpd(4, 'R');
+
       break;
     case UR:
-      digitalWrite(12,HIGH);
+      // Turn R while driving forward
+      // Both sides forward
+      // Right side half speed
+      setDir(HIGH, 'R');
+      setDir(HIGH, 'L');
+      setSpd(4, 'L');
+      setSpd(2, 'R');
       break;
     case UL:
-      digitalWrite(5,HIGH);
+      // Turn L while driving forward
+      // Both sides forward
+      // Left side half speed
+      setDir(HIGH, 'R');
+      setDir(HIGH, 'L');
+      setSpd(2, 'L');
+      setSpd(4, 'R');
+
       break;
     default:
+      // Brake
+      brake();
       break;
   }
   delay(250);
@@ -64,12 +134,94 @@ void loop() {
   SerialEvent occurs whenever a new data comes in the hardware serial RX. This
   routine is run between each time loop() runs, so using delay inside loop can
   delay response. Multiple bytes of data may be available.
+  // see https://www.arduino.cc/reference/en/language/functions/communication/serial/serialevent/
 */
 bool led_state = LOW;
-void serialEvent() {
-  while (Serial.available()) {
-    receivedByte = (int)Serial.read();
+void serialEvent1() {
+  while (Serial1.available()) {
+    receivedByte = (int)Serial1.read();
     digitalWrite(LED_BUILTIN, led_state);
     led_state = !led_state;
   }
+}
+
+
+
+void turn(char dir) {
+  if (dir = 'L') {
+    // CCW
+    setDir(HIGH, 'R');
+    setDir(LOW, 'L');
+    setSpd(5, 'L');
+    setSpd(5, 'R');
+
+  } else {
+    // CW
+    setDir(HIGH, 'L');
+    setDir(LOW, 'R');
+    setSpd(5, 'L');
+    setSpd(5, 'R');
+
+
+  }
+}
+
+void drive(char dir) {
+  if (dir = 'F') {
+    // Forward
+    setDir(HIGH, 'R');
+    setDir(HIGH, 'L');
+    setSpd(4, 'L');
+    setSpd(4, 'R');
+
+
+  } else {
+    // Backward
+    setDir(LOW, 'R');
+    setDir(LOW, 'L');
+    setSpd(4, 'L');
+    setSpd(4, 'R');
+
+  }
+}
+
+
+
+void setDir( int fwd, char side) {
+  if (side == 'L') {
+    digitalWrite(PinLeftForward, fwd);
+    digitalWrite(PinLeftBackward, !fwd);
+
+  }
+  else {
+    digitalWrite(PinRightForward, fwd);
+    digitalWrite(PinRightBackward, !fwd);
+  }
+}
+
+void brake() {
+  digitalWrite(PinLeftForward, LOW);
+  digitalWrite(PinLeftBackward, LOW);
+  digitalWrite(PinRightForward, LOW);
+  digitalWrite(PinRightBackward, LOW);
+
+
+}
+
+void setSpd(int v, char side) {
+  if (side == 'L') {
+    analogWrite(PinLeftPWM, v * 51);
+  } else {
+    analogWrite(PinRightPWM, v * 51);
+  }
+}
+
+
+
+void service2() {
+  encoderR++;
+}
+
+void service4() {
+  encoderL++;
 }
