@@ -1,12 +1,12 @@
 
-#define UL 128
-#define UR  64
+#define U    1
+#define UR   2
+#define R    4
+#define DR   8
+#define D   16
 #define DL  32
-#define DR  16
-#define U    8
-#define D    4
-#define L    2
-#define R    1
+#define L   64
+#define UL 128
 
 
 const int PinRightPWM = 9;
@@ -22,7 +22,7 @@ int encoderL = 0;
 
 
 int receivedByte = 0;
-
+bool led_state = LOW;
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
@@ -48,11 +48,17 @@ void setup() {
 
   delay(1000);
   brake();
-
+  Serial.begin(9600);
   Serial1.begin(57600);
 }
 
 void loop() {
+  while (Serial1.available()) {
+    receivedByte = (int)Serial1.read();
+    Serial.println(receivedByte);
+    digitalWrite(LED_BUILTIN, led_state);
+    led_state = !led_state;
+  }
 
   switch (receivedByte) {
     // do stuff based on received byte
@@ -120,6 +126,7 @@ void loop() {
       setSpd(4, 'R');
 
       break;
+                                            
     default:
       // Brake
       brake();
@@ -136,14 +143,14 @@ void loop() {
   delay response. Multiple bytes of data may be available.
   // see https://www.arduino.cc/reference/en/language/functions/communication/serial/serialevent/
 */
-bool led_state = LOW;
-void serialEvent1() {
-  while (Serial1.available()) {
-    receivedByte = (int)Serial1.read();
-    digitalWrite(LED_BUILTIN, led_state);
-    led_state = !led_state;
-  }
-}
+
+//void serialEvent1() {
+//  while (Serial1.available()) {
+//    receivedByte = (int)Serial1.read();
+//    digitalWrite(LED_BUILTIN, led_state);
+//    led_state = !led_state;
+//  }
+//}
 
 
 

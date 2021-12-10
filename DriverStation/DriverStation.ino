@@ -6,14 +6,15 @@ const int pinL = 11; // left
   //  UL  UR  DL  DR  U  D  L  R
   // 128  64  32  16  8  4  2  1
 
-#define UL 128
-#define UR  64
+#define U    1
+#define UR   2
+#define R    4
+#define DR   8
+#define D   16
 #define DL  32
-#define DR  16
-#define U    8
-#define D    4
-#define L    2
-#define R    1
+#define L   64
+#define UL 128
+
 
 
 void setup() {
@@ -52,7 +53,11 @@ void loop() {
     }
   } else {
     // single direction or stopped
-    message = (up << 3 | down << 2 | left << 1 | right);
+    if(up) message = U;
+    else if(down) message = D;
+    else if(left) message = L;
+    else if(right) message = R;
+    else message = 0;
   }
 //  Serial.print("UP: ");
 //  Serial.print(up);

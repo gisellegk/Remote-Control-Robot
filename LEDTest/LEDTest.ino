@@ -1,23 +1,33 @@
 
-#define UL 128
-#define UR  64
+
+#define U    1
+#define UR   2
+#define R    4
+#define DR   8
+#define D   16
 #define DL  32
-#define DR  16
-#define U    8
-#define D    4
-#define L    2
-#define R    1
+#define L   64
+#define UL 128
 
 
 int receivedByte = 0;
-
+bool led_state = LOW;
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
-  Serial.begin(57600);
+  Serial.begin(9600);
+  Serial.println("Beginning test code");
+  Serial1.begin(57600);
 }
 
 void loop() {
+  while (Serial1.available()) {
+    receivedByte = (int)Serial1.read();
+    Serial.println(receivedByte);
+    digitalWrite(LED_BUILTIN, led_state);
+    led_state = !led_state;
+  }
+  
   digitalWrite(6,LOW);
   digitalWrite(7,LOW);
   digitalWrite(8,LOW);
@@ -28,25 +38,25 @@ void loop() {
   digitalWrite(5,LOW);
   switch(receivedByte){
     // do stuff based on received byte
-    case R:
+    case U:
       digitalWrite(6,HIGH);
       break;
-    case L:
+    case UR:
       digitalWrite(7,HIGH);
       break;
-    case D:
+    case R:
       digitalWrite(8,HIGH);
       break;
-    case U:
+    case DR:
       digitalWrite(9,HIGH);
       break;
-    case DR:
+    case D:
       digitalWrite(10,HIGH);
       break;
     case DL:
       digitalWrite(11,HIGH);
       break;
-    case UR:
+    case L:
       digitalWrite(12,HIGH);
       break;
     case UL:
@@ -65,11 +75,12 @@ void loop() {
   routine is run between each time loop() runs, so using delay inside loop can
   delay response. Multiple bytes of data may be available.
 */
-bool led_state = LOW;
-void serialEvent() {
-  while (Serial.available()) {
-    receivedByte = (int)Serial.read();
-    digitalWrite(LED_BUILTIN, led_state);
-    led_state = !led_state;
-  }
-}
+
+//void serialEvent1() {
+//  while (Serial1.available()) {
+//    receivedByte = (int)Serial1.read();
+//    Serial.println(receivedByte);
+//    digitalWrite(LED_BUILTIN, led_state);
+//    led_state = !led_state;
+//  }
+//}
